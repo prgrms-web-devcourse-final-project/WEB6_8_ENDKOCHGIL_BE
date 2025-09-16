@@ -1,2 +1,2 @@
-# -WEB6_8_ENDCHGIL_BE
+# -WEB6_8_ENDKOCHGIL_BE
 프로그래머스 웹개발 백엔드 6기 8회차 8팀 최종 프로젝트 백엔드 레포지토리입니다 
