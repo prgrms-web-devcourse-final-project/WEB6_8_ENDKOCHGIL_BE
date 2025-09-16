@@ -21,3 +21,14 @@ spring:
         format_sql: true
         highlight_sql: true
         use_sql_comments: true
+management:
+  endpoints:
+    web:
+      base-path: /actuator            # 기본값이지만 명시
+      exposure:
+        include: health,info          # 필요시 metrics 등 추가
+  endpoint:
+    health:
+      probes:
+        enabled: true                 # /actuator/health/{liveness,readiness} 활성화
+      show-details: never             # 프로브 용도면 never 권장(민감정보 차단)
