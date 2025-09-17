@@ -1,5 +1,6 @@
 package com.back.domain.member.controller;
 
+import com.back.domain.member.dto.MemberDto;
 import com.back.domain.member.dto.MemberSignupReqDto;
 import com.back.domain.member.entity.Member;
 import com.back.domain.member.service.MemberService;
@@ -24,7 +25,7 @@ public class ApiV1MemberController {
 
     @PostMapping("/signup")
     @Operation(summary = "회원가입", description = "회원 가입 API")
-    public ResponseEntity<ApiResponse<Member>> signup(
+    public ResponseEntity<ApiResponse<MemberDto>> signup(
             @Valid @RequestBody MemberSignupReqDto reqBody
     ) {
         Member member = memberService.signup(
@@ -40,7 +41,7 @@ public class ApiV1MemberController {
                 .body(new ApiResponse<>(
                         "201",
                         "회원가입 성공",
-                        member)
+                        new MemberDto(member))
                 );
     }
 
