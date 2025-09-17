@@ -10,5 +10,5 @@ variable "prefix" {
 
 variable "app_1_domain" {
   description = "app_1 domain"
-  default     = "api.challenge.noredsun.com"
+  default     = "api.nutree.noredsun.com"
 }
