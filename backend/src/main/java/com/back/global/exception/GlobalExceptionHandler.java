@@ -20,7 +20,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleCustomException(CustomException e) {
         log.error("CustomException 발생", e);
         ApiResponse<Void> response = ApiResponse.fail(e.getCode(), e.getMessageKey());
-        return ResponseEntity.status(e.getHttpStatus()).body(response);
+        return ResponseEntity
+                .status(e.getHttpStatus())
+                .body(response);
     }
 
     // 2️⃣ DTO 검증 오류 처리 (@Valid)
@@ -31,8 +33,10 @@ public class GlobalExceptionHandler {
             errors.put(fieldError.getField(), fieldError.getDefaultMessage());
         }
         ApiResponse<Map<String, String>> response =
-                ApiResponse.fail(ErrorCode.INVALID_INPUT.getCode(), ErrorCode.INVALID_INPUT.getMessage(), errors);
-        return ResponseEntity.badRequest().body(response);
+                ApiResponse.fail(ErrorCode.BAD_REQUEST.getCode(), ErrorCode.BAD_REQUEST.getMessage(), errors);
+        return ResponseEntity
+                .badRequest()
+                .body(response);
     }
 
     // 3️⃣ 그 외 일반 예외 처리
@@ -41,6 +45,8 @@ public class GlobalExceptionHandler {
         log.error("알 수 없는 예외 발생", e);
         ApiResponse<Void> response =
                 ApiResponse.fail(ErrorCode.INTERNAL_SERVER_ERROR.getCode(), ErrorCode.INTERNAL_SERVER_ERROR.getMessage());
-        return ResponseEntity.status(ErrorCode.INTERNAL_SERVER_ERROR.getHttpStatus()).body(response);
+        return ResponseEntity
+                .status(ErrorCode.INTERNAL_SERVER_ERROR.getHttpStatus())
+                .body(response);
     }
 }

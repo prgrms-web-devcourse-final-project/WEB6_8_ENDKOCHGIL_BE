@@ -2,10 +2,16 @@ package com.back.global.exception;
 
 public class CustomException extends RuntimeException {
     private final ErrorCode errorCode;
+    private final String errorMessage;
 
     public CustomException(ErrorCode errorCode) {
-        super(errorCode.getMessage());
+        this(errorCode, errorCode.getMessage());
+    }
+
+    public CustomException(ErrorCode errorCode, String errorMessage) {
+        super(errorMessage);
         this.errorCode = errorCode;
+        this.errorMessage = errorMessage;
     }
 
     public ErrorCode getErrorCode() {
@@ -17,7 +23,7 @@ public class CustomException extends RuntimeException {
     }
 
     public String getMessageKey() {
-        return errorCode.getMessage();
+        return errorMessage;
     }
 
     public org.springframework.http.HttpStatus getHttpStatus() {
