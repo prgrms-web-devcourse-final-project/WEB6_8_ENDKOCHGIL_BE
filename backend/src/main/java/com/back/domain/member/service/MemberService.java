@@ -1,9 +1,11 @@
 package com.back.domain.member.service;
 
 import com.back.domain.member.entity.Member;
+import com.back.domain.member.entity.MemberGender;
 import com.back.domain.member.repository.MemberRepository;
+import com.back.global.exception.CustomException;
+import com.back.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.service.spi.ServiceException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,17 +20,23 @@ public class MemberService {
 
     // 가입
     @Transactional
-    public Member signup(String email, String password, String name) {
+    public Member signup(
+            String email,
+            String password,
+            String name,
+            int age,
+            MemberGender gender
+    ) {
         //검증
         memberRepository
                 .findByEmail(email)
                 .ifPresent(_member -> {
-                    throw new ServiceException("이미 존재하는 아이디입니다.");
+                    throw new CustomException(ErrorCode.CONFLICT, "존재하지 않는 이메일입니다.");
                 });
 
         //계정 생성
         password = passwordEncoder.encode(password);
-        Member member = new Member(email, password, name);
+        Member member = new Member(email, password, name, age, gender);
 
         return memberRepository.save(member);
     }

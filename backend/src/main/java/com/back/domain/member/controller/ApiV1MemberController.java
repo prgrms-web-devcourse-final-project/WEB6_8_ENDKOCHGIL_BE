@@ -1,6 +1,5 @@
 package com.back.domain.member.controller;
 
-import com.back.domain.member.dto.MemberDto;
 import com.back.domain.member.dto.MemberSignupReqDto;
 import com.back.domain.member.entity.Member;
 import com.back.domain.member.service.MemberService;
@@ -9,6 +8,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,13 +23,40 @@ public class ApiV1MemberController {
     private final MemberService memberService;
 
     @PostMapping("/signup")
-    @Operation(summary = "회원가입", description = "새로운 회원 등록")
-    public ApiResponse<MemberDto> signup(
+    @Operation(summary = "회원가입", description = "회원 가입 API")
+    public ResponseEntity<ApiResponse<Member>> signup(
             @Valid @RequestBody MemberSignupReqDto reqBody
     ) {
-        Member member = memberService.signup(reqBody.email(),  reqBody.password(), reqBody.name());
+        Member member = memberService.signup(
+                reqBody.email(),
+                reqBody.password(),
+                reqBody.name(),
+                reqBody.age(),
+                reqBody.gender()
+        );
 
-        return ApiResponse.success("회원가입 성공", new MemberDto(member));
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(new ApiResponse<>(
+                        "201",
+                        "회원가입 성공",
+                        member)
+                );
     }
 
+    @PostMapping("/login")
+    @Operation(summary = "로그인", description = "회원 로그인 API")
+    public void login(
+
+    ) {
+
+    }
+
+    @PostMapping("/logout")
+    @Operation(summary = "로그아웃", description = "회원 로그아웃 API")
+    public void logout(
+
+    ) {
+
+    }
 }

@@ -9,6 +9,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.SoftDelete;
 
+import java.util.UUID;
+
 @Entity
 @Getter
 @NoArgsConstructor
@@ -16,23 +18,31 @@ import org.hibernate.annotations.SoftDelete;
 @Builder
 @SoftDelete
 public class Member extends BaseEntity {
+    //회원 정보
     @Column(unique = true)
     private String email;
     private String password;
     private String name;
-    private int level;
-    private int xp;
-    private int money;
-    private MemberRole role;
+    private int age;
+    private MemberGender gender;
 
-    public Member(String email, String password, String name) {
+    //상태 및 아이템 정보
+    private int level = 1;
+    private int xp = 0;
+    private int money = 0;
+
+    //개발자용 정보
+    private MemberRole role = MemberRole.USER;
+    private String apiKey;
+
+    public Member(String email, String password, String name, int age, MemberGender gender) {
         this.email = email;
         this.password = password;
         this.name = name;
-        this.level = 1;
-        this.xp = 0;
-        this.money = 0;
-        this.role = MemberRole.USER;
+        this.age = age;
+        this.gender = gender;
+
+        this.apiKey = UUID.randomUUID().toString();
     }
 
     public void modifyPassword(String password) {
@@ -41,6 +51,14 @@ public class Member extends BaseEntity {
 
     public void modifyName(String name) {
         this.name = name;
+    }
+
+    public void modifyAge(int age) {
+        this.age = age;
+    }
+
+    public void modifyGender(MemberGender gender) {
+        this.gender = gender;
     }
 
     public void modifyLevel(int level) {
