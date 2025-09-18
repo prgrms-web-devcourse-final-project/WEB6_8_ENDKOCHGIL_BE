@@ -8,7 +8,12 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.SoftDelete;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -35,6 +40,7 @@ public class Member extends BaseEntity {
     private MemberRole role = MemberRole.USER;
     private String apiKey;
 
+    //생성자(회원 가입)
     public Member(String email, String password, String name, int age, MemberGender gender) {
         this.email = email;
         this.password = password;
@@ -45,6 +51,13 @@ public class Member extends BaseEntity {
         this.apiKey = UUID.randomUUID().toString();
     }
 
+    //생성자(SecurityUser용)
+    public Member(int id, String email) {
+        setId(id);
+        this.email = email;
+    }
+
+    // *** Modify 메소드 ***
     public void modifyPassword(String password) {
         this.password = password;
     }
@@ -71,5 +84,23 @@ public class Member extends BaseEntity {
 
     public void modifyMoney(int money) {
         this.money = money;
+    }
+
+    //
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return getAuthoritiesAsStringList()
+                .stream()
+                .map(SimpleGrantedAuthority::new)
+                .toList();
+    }
+
+    private List<String> getAuthoritiesAsStringList() {
+        List<String> authorities = new ArrayList<>();
+
+        if (this.role == MemberRole.ADMIN) {
+            authorities.add("ROLE_ADMIN");
+        }
+
+        return authorities;
     }
 }
