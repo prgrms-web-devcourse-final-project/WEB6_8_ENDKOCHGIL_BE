@@ -29,14 +29,12 @@ public class MemberService {
             int age,
             MemberGender gender
     ) {
-        //검증
         memberRepository
                 .findByEmail(email)
                 .ifPresent(_member -> {
                     throw new CustomException(ErrorCode.CONFLICT, "이미 가입된 이메일입니다.");
                 });
 
-        //계정 생성
         password = passwordEncoder.encode(password);
         Member member = new Member(email, password, name, age, gender);
 
