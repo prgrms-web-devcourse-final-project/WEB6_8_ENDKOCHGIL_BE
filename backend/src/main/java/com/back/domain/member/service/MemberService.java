@@ -52,7 +52,7 @@ public class MemberService {
         return member;
     }
 
-    // *** Find 메소드 ***
+    // *** Find 메서드 ***
     public Optional<Member> findById(int id) {
         return memberRepository.findById(id);
     }
@@ -65,12 +65,12 @@ public class MemberService {
         return memberRepository.findByApiKey(apiKey);
     }
 
-    // *** Modify 메소드 ***
+    // *** Modify 메서드 ***
     public void modify() {
 
     }
 
-    // *** 인증/인가 관련 메소드 ***
+    // *** 인증/인가 관련 메서드 ***
     public String genAccessToken(Member member) {
         return authService.genAccessToken(member);
     }
