@@ -1,15 +1,17 @@
 package com.back.domain.mission.entitiy;
 
-import com.back.domain.mission.enums.TaskStatus;
 import com.back.global.jpa.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
+import static lombok.AccessLevel.PROTECTED;
 
 @Getter
 @Setter
-@NoArgsConstructor
+@NoArgsConstructor(access = PROTECTED)
 @AllArgsConstructor
 @Builder
 @Entity
@@ -19,12 +21,17 @@ public class Task extends BaseEntity {
     @JoinColumn(name="category_id", nullable = false)
     private Category category;
 
+
+    @Column(nullable = false)
     private String title;
-    private LocalDate dueDate; //수행예정일
 
-    private boolean carrayOver = false;
+    @Column(nullable = false)
+    private int dayNum;     // 주차 내 며칠에 해당하는 지 ( 1 = 월, ... )
 
-    @Enumerated(EnumType.STRING)
-    private TaskStatus status;
+    @Column(nullable = false)
+    private int orderNum;     // 같은 dayNum 안에서 순서 구분하기 위한 엔티티 ( 여러 task 안쓰면 상관 X )
+
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TaskLog> taskLogs = new ArrayList<>();
 
 }
