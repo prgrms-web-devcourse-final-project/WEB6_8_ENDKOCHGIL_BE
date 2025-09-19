@@ -3,10 +3,7 @@ package com.back.domain.member.entity;
 import com.back.global.jpa.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.SoftDelete;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -18,12 +15,13 @@ import java.util.UUID;
 
 @Entity
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Builder(toBuilder=true)
 @SoftDelete
 public class Member extends BaseEntity {
-    //회원 정보
+    // *** 회원 정보 ***
     @Column(unique = true)
     private String email;
     private String password;
@@ -31,12 +29,12 @@ public class Member extends BaseEntity {
     private int age;
     private MemberGender gender;
 
-    //상태 및 아이템 정보
+    // *** 상태 및 아이템 정보 ***
     private int level = 1;
     private int xp = 0;
     private int money = 0;
 
-    //개발자용 정보
+    // *** 개발자용 정보 ***
     private MemberRole role = MemberRole.USER;
     private String apiKey;
 
@@ -57,36 +55,7 @@ public class Member extends BaseEntity {
         this.email = email;
     }
 
-    // *** Modify 메소드 ***
-    public void modifyPassword(String password) {
-        this.password = password;
-    }
-
-    public void modifyName(String name) {
-        this.name = name;
-    }
-
-    public void modifyAge(int age) {
-        this.age = age;
-    }
-
-    public void modifyGender(MemberGender gender) {
-        this.gender = gender;
-    }
-
-    public void modifyLevel(int level) {
-        this.level = level;
-    }
-
-    public void modifyXp(int xp) {
-        this.xp = xp;
-    }
-
-    public void modifyMoney(int money) {
-        this.money = money;
-    }
-
-    //
+    // *** 인증/인가 메서드 ***
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return getAuthoritiesAsStringList()
                 .stream()
