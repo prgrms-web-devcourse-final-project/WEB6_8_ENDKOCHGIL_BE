@@ -14,6 +14,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @RestController
 @RequestMapping("/api/v1/parties")
 @RequiredArgsConstructor
@@ -87,5 +90,29 @@ public class ApiV1PartyController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResponse.success("200", "파티 삭제 성공"));
+    }
+
+    @GetMapping
+    @Operation(summary = "파티 목록 조회", description = "공개 파티 목록을 조회하는 API")
+    public ResponseEntity<ApiResponse<List<PartyDto>>> getPartyList() {
+        List<Party> parties = partyService.getPartyList();
+        List<PartyDto> partyDtos = parties.stream()
+                .map(PartyDto::new)
+                .collect(Collectors.toList());
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResponse.success("200", "파티 목록 조회 성공", partyDtos));
+    }
+
+    @GetMapping("/{partyId}")
+    @Operation(summary = "특정 파티 조회", description = "특정 파티의 상세 정보를 조회하는 API")
+    public ResponseEntity<ApiResponse<PartyDto>> getPartyDetails(@PathVariable Integer partyId) {
+        Party party = partyService.getPartyDetails(partyId);
+        PartyDto partyDto = new PartyDto(party);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResponse.success("200", "파티 상세 조회 성공", partyDto));
     }
 }

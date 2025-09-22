@@ -148,4 +148,15 @@ public class PartyService {
         // 파티 삭제
         partyRepository.deleteById(partyId);
     }
+
+    @Transactional(readOnly = true)
+    public List<Party> getPartyList() {
+        return partyRepository.findByIsPublic(true);
+    }
+
+    @Transactional(readOnly = true)
+    public Party getPartyDetails(Integer partyId) {
+        return partyRepository.findById(partyId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "해당 파티를 찾을 수 없습니다."));
+    }
 }
