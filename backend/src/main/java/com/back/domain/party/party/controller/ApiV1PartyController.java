@@ -1,9 +1,6 @@
 package com.back.domain.party.party.controller;
 
-import com.back.domain.party.party.dto.PartyDto;
-import com.back.domain.party.party.dto.PartyMemberDto;
-import com.back.domain.party.party.dto.PartyRequestDto;
-import com.back.domain.party.party.dto.PartyUpdateRequestDto;
+import com.back.domain.party.party.dto.*;
 import com.back.domain.party.party.entity.Party;
 import com.back.domain.party.party.entity.PartyMember;
 import com.back.domain.party.party.service.PartyService;
@@ -119,13 +116,13 @@ public class ApiV1PartyController {
     }
 
     @PostMapping("/{partyId}/invite")
-    @Operation(summary = "파티 초대", description = "파티장이 다른 멤버를 파티에 초대하는 API")
+    @Operation(summary = "파티 초대 (이메일)", description = "파티장이 다른 멤버를 이메일 주소로 파티에 초대하는 API")
     public ResponseEntity<ApiResponse<Void>> inviteMember(
             @PathVariable Integer partyId,
             @RequestParam("leaderId") Integer leaderId,
-            @RequestParam("invitedMemberId") Integer invitedMemberId
+            @RequestBody @Valid InvitationDto invitationDto
     ) {
-        partyService.inviteMember(partyId, leaderId, invitedMemberId);
+        partyService.inviteMember(partyId, leaderId, invitationDto.getInvitedMemberEmail());
 
         return ResponseEntity
                 .status(HttpStatus.OK)
