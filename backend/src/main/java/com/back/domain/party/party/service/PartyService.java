@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -72,5 +74,33 @@ public class PartyService {
         partyMember.setStatus(PartyMemberStatus.ACCEPTED);
         partyMember.setJoinedAt(LocalDateTime.now());
         partyMemberRepository.save(partyMember);
+    }
+
+    @Transactional
+    public void leaveParty(Integer partyId, Integer memberId) {
+        PartyMember leavingMember = partyMemberRepository.findByParty_IdAndMember_Id(partyId, memberId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
+
+        Party party = leavingMember.getParty();
+
+        // 파티장인지 확인
+        if (party.getLeader().getId() == memberId) {
+            // 본인을 제외한 모든 멤버를 가입일 순으로 정렬하여 조회
+            List<PartyMember> otherMembers = partyMemberRepository.findByParty_Id(partyId);
+            otherMembers.removeIf(pm -> pm.getMember().getId() == memberId);
+            otherMembers.sort(Comparator.comparing(PartyMember::getJoinedAt));
+
+            // 남은 멤버가 있다면 새로운 파티장 위임
+            if (!otherMembers.isEmpty()) {
+                PartyMember newLeaderMember = otherMembers.getFirst();
+                party.setLeader(newLeaderMember.getMember());
+            } else {
+                // 남은 멤버가 없다면 파티 삭제
+                partyRepository.delete(party);
+            }
+        }
+
+        // 파티 멤버 목록에서 탈퇴 멤버 삭제
+        partyMemberRepository.delete(leavingMember);
     }
 }

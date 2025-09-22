@@ -47,4 +47,17 @@ public class ApiV1PartyController {
                 .status(HttpStatus.OK)
                 .body(ApiResponse.success("200", "파티 가입 성공"));
     }
+
+    @DeleteMapping("/{partyId}/leave")
+    @Operation(summary = "파티 탈퇴", description = "가입된 파티를 탈퇴하는 API")
+    public ResponseEntity<ApiResponse<Void>> leaveParty(
+            @PathVariable Integer partyId,
+            @RequestParam("memberId") Integer memberId
+    ) {
+        partyService.leaveParty(partyId, memberId);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResponse.success("200", "파티 탈퇴 성공"));
+    }
 }
