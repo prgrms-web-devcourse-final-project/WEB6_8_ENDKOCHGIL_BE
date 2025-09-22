@@ -130,4 +130,22 @@ public class PartyService {
             party.setPublic(requestDto.getIsPublicStatus());
         }
     }
+
+    @Transactional
+    public void deleteParty(Integer partyId, Integer memberId) {
+        Party party = partyRepository.findById(partyId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
+
+        // 요청한 멤버가 파티장이 맞는지 확인
+        if (party.getLeader().getId() != memberId) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED, "파티 삭제 권한이 없습니다.");
+        }
+
+        // 파티에 속한 모든 멤버 관계를 먼저 삭제
+        List<PartyMember> partyMembers = partyMemberRepository.findByParty_Id(partyId);
+        partyMemberRepository.deleteAll(partyMembers);
+
+        // 파티 삭제
+        partyRepository.deleteById(partyId);
+    }
 }

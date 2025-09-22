@@ -75,4 +75,17 @@ public class ApiV1PartyController {
                 .status(HttpStatus.OK)
                 .body(ApiResponse.success("200", "파티 수정 성공"));
     }
+
+    @DeleteMapping("/{partyId}")
+    @Operation(summary = "파티 삭제", description = "파티를 삭제하는 API")
+    public ResponseEntity<ApiResponse<Void>> deleteParty(
+            @PathVariable Integer partyId,
+            @RequestParam("memberId") Integer memberId
+    ) {
+        partyService.deleteParty(partyId, memberId);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResponse.success("200", "파티 삭제 성공"));
+    }
 }
