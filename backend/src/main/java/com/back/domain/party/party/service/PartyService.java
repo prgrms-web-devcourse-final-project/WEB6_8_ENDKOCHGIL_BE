@@ -3,6 +3,7 @@ package com.back.domain.party.party.service;
 import com.back.domain.member.entity.Member;
 import com.back.domain.member.repository.MemberRepository;
 import com.back.domain.party.party.dto.PartyRequestDto;
+import com.back.domain.party.party.dto.PartyUpdateRequestDto;
 import com.back.domain.party.party.entity.Party;
 import com.back.domain.party.party.entity.PartyMember;
 import com.back.domain.party.party.entity.PartyMemberStatus;
@@ -102,5 +103,31 @@ public class PartyService {
 
         // 파티 멤버 목록에서 탈퇴 멤버 삭제
         partyMemberRepository.delete(leavingMember);
+    }
+
+    @Transactional
+    public void updateParty(Integer partyId, PartyUpdateRequestDto requestDto, Integer memberId) {
+        Party party = partyRepository.findById(partyId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
+
+        // 요청한 멤버가 파티장이 맞는지 확인
+        if (party.getLeader().getId() != memberId) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED, "파티 수정 권한이 없습니다.");
+        }
+
+        // DTO에서 변경된 값이 있으면 파티 엔티티에 반영
+        if (requestDto.getName() != null) {
+            party.setName(requestDto.getName());
+        }
+        if (requestDto.getMaxMembers() != null) {
+            // 새로운 최대 인원이 현재 멤버 수보다 적으면 예외 발생
+            if (requestDto.getMaxMembers() < party.getPartyMembers().size()) {
+                throw new CustomException(ErrorCode.BAD_REQUEST, "새로운 최대 인원은 현재 멤버 수보다 적을 수 없습니다.");
+            }
+            party.setMaxMembers(requestDto.getMaxMembers());
+        }
+        if (requestDto.getIsPublicStatus() != null) {
+            party.setPublic(requestDto.getIsPublicStatus());
+        }
     }
 }

@@ -2,6 +2,7 @@ package com.back.domain.party.party.controller;
 
 import com.back.domain.party.party.dto.PartyDto;
 import com.back.domain.party.party.dto.PartyRequestDto;
+import com.back.domain.party.party.dto.PartyUpdateRequestDto;
 import com.back.domain.party.party.entity.Party;
 import com.back.domain.party.party.service.PartyService;
 import com.back.global.common.ApiResponse;
@@ -59,5 +60,19 @@ public class ApiV1PartyController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResponse.success("200", "파티 탈퇴 성공"));
+    }
+
+    @PatchMapping("/{partyId}")
+    @Operation(summary = "파티 수정", description = "파티의 이름, 최대 멤버 수, 공개 여부를 수정하는 API")
+    public ResponseEntity<ApiResponse<Void>> updateParty(
+            @PathVariable Integer partyId,
+            @Valid @RequestBody PartyUpdateRequestDto requestDto,
+            @RequestParam("memberId") Integer memberId
+    ) {
+        partyService.updateParty(partyId, requestDto, memberId);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResponse.success("200", "파티 수정 성공"));
     }
 }
