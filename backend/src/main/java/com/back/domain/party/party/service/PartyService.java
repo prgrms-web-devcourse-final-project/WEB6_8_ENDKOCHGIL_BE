@@ -223,6 +223,34 @@ public class PartyService {
         partyMemberRepository.delete(partyMember);
     }
 
+    @Transactional
+    public void kickMember(Integer partyId, Integer leaderId, Integer kickedMemberId) {
+        Party party = partyRepository.findById(partyId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "파티를 찾을 수 없습니다."));
+
+        // 1. 추방을 요청한 멤버가 파티장인지 확인
+        if (party.getLeader().getId() != leaderId) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED, "파티원 추방 권한이 없습니다.");
+        }
+
+        // 2. 파티장 자신을 추방하는 것 방지
+        if (leaderId.equals(kickedMemberId)) {
+            throw new CustomException(ErrorCode.BAD_REQUEST, "파티장 자신은 추방할 수 없습니다.");
+        }
+
+        // 3. 추방하려는 멤버가 해당 파티에 속해 있는지 확인
+        PartyMember kickedMember = partyMemberRepository.findByParty_IdAndMember_Id(partyId, kickedMemberId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "해당 파티원을 찾을 수 없습니다."));
+
+        // 4. 멤버 상태가 ACCEPTED인지 확인
+        if (kickedMember.getStatus() != PartyMemberStatus.ACCEPTED) {
+            throw new CustomException(ErrorCode.BAD_REQUEST, "가입이 완료된 파티원만 추방할 수 있습니다.");
+        }
+
+        // 5. 파티원 삭제
+        partyMemberRepository.delete(kickedMember);
+    }
+
     @Transactional(readOnly = true)
     public List<PartyMember> getPendingJoinRequests(Integer partyId, Integer leaderId) {
         Party party = partyRepository.findById(partyId)

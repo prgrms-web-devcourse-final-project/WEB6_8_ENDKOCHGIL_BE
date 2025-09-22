@@ -156,6 +156,20 @@ public class ApiV1PartyController {
                 .body(ApiResponse.success("200", "초대/신청 거절 성공"));
     }
 
+    @DeleteMapping("/{partyId}/members/{kickedMemberId}")
+    @Operation(summary = "파티원 추방", description = "파티장이 특정 파티원을 추방하는 API")
+    public ResponseEntity<ApiResponse<Void>> kickMember(
+            @PathVariable Integer partyId,
+            @RequestParam("leaderId") Integer leaderId,
+            @PathVariable Integer kickedMemberId
+    ) {
+        partyService.kickMember(partyId, leaderId, kickedMemberId);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResponse.success("200", "파티원 추방 성공"));
+    }
+
     @GetMapping("/{partyId}/requests")
     @Operation(summary = "파티 가입 신청/초대 목록 조회", description = "파티장이 가입 신청 또는 초대 대기 중인 멤버 목록을 조회하는 API")
     public ResponseEntity<ApiResponse<List<PartyMemberDto>>> getPendingJoinRequests(
