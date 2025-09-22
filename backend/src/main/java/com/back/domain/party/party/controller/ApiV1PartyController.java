@@ -115,4 +115,42 @@ public class ApiV1PartyController {
                 .status(HttpStatus.OK)
                 .body(ApiResponse.success("200", "파티 상세 조회 성공", partyDto));
     }
+
+    @PostMapping("/{partyId}/invite")
+    @Operation(summary = "파티 초대", description = "파티장이 다른 멤버를 파티에 초대하는 API")
+    public ResponseEntity<ApiResponse<Void>> inviteMember(
+            @PathVariable Integer partyId,
+            @RequestParam("leaderId") Integer leaderId,
+            @RequestParam("invitedMemberId") Integer invitedMemberId
+    ) {
+        partyService.inviteMember(partyId, leaderId, invitedMemberId);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResponse.success("200", "파티 초대 성공"));
+    }
+
+    @PostMapping("/{partyId}/accept")
+    @Operation(summary = "초대 수락", description = "초대받은 멤버가 파티 초대를 수락하는 API")
+    public ResponseEntity<ApiResponse<Void>> acceptInvitation(
+            @PathVariable Integer partyId,
+            @RequestParam("memberId") Integer memberId
+    ) {
+        partyService.acceptInvitation(partyId, memberId);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResponse.success("200", "파티 초대 수락 성공"));
+    }
+
+    @PostMapping("/{partyId}/reject")
+    @Operation(summary = "초대 거절", description = "초대받은 멤버가 파티 초대를 거절하는 API")
+    public ResponseEntity<ApiResponse<Void>> rejectInvitation(
+            @PathVariable Integer partyId,
+            @RequestParam("memberId") Integer memberId
+    ) {
+        partyService.rejectInvitation(partyId, memberId);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResponse.success("200", "파티 초대 거절 성공"));
+    }
 }

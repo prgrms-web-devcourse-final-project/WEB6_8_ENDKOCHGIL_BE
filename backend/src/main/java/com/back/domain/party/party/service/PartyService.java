@@ -159,4 +159,63 @@ public class PartyService {
         return partyRepository.findById(partyId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "해당 파티를 찾을 수 없습니다."));
     }
+
+    @Transactional
+    public void inviteMember(Integer partyId, Integer leaderId, Integer invitedMemberId) {
+        Party party = partyRepository.findById(partyId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
+
+        if (party.getLeader().getId() != leaderId) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED, "파티 초대 권한이 없습니다.");
+        }
+
+        if (party.getPartyMembers().size() >= party.getMaxMembers()) {
+            throw new CustomException(ErrorCode.CONFLICT, "파티의 정원이 가득 찼습니다.");
+        }
+
+        if (partyMemberRepository.findByParty_IdAndMember_Id(partyId, invitedMemberId).isPresent()) {
+            throw new CustomException(ErrorCode.CONFLICT, "이미 파티에 가입되어 있거나 초대 대기 중인 멤버입니다.");
+        }
+
+        Member invitedMember = memberRepository.findById(invitedMemberId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
+
+        PartyMember partyMember = new PartyMember();
+        partyMember.setParty(party);
+        partyMember.setMember(invitedMember);
+        partyMember.setStatus(PartyMemberStatus.PENDING);
+        partyMember.setJoinedAt(LocalDateTime.now());
+        partyMemberRepository.save(partyMember);
+    }
+
+    @Transactional
+    public void acceptInvitation(Integer partyId, Integer memberId) {
+        PartyMember partyMember = partyMemberRepository.findByParty_IdAndMember_Id(partyId, memberId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "초대 정보를 찾을 수 없습니다."));
+
+        if (partyMember.getStatus() != PartyMemberStatus.PENDING) {
+            throw new CustomException(ErrorCode.BAD_REQUEST, "초대 대기 상태가 아닙니다.");
+        }
+
+        // 파티 정원 확인
+        if (partyMember.getParty().getPartyMembers().stream()
+                .filter(pm -> pm.getStatus() == PartyMemberStatus.ACCEPTED)
+                .count() >= partyMember.getParty().getMaxMembers()) {
+            throw new CustomException(ErrorCode.CONFLICT, "파티의 정원이 가득 찼습니다.");
+        }
+
+        partyMember.setStatus(PartyMemberStatus.ACCEPTED);
+    }
+
+    @Transactional
+    public void rejectInvitation(Integer partyId, Integer memberId) {
+        PartyMember partyMember = partyMemberRepository.findByParty_IdAndMember_Id(partyId, memberId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "초대 정보를 찾을 수 없습니다."));
+
+        if (partyMember.getStatus() != PartyMemberStatus.PENDING) {
+            throw new CustomException(ErrorCode.BAD_REQUEST, "초대 대기 상태가 아닙니다.");
+        }
+
+        partyMemberRepository.delete(partyMember);
+    }
 }
