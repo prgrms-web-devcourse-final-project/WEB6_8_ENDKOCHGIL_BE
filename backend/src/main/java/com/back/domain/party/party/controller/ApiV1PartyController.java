@@ -1,9 +1,11 @@
 package com.back.domain.party.party.controller;
 
 import com.back.domain.party.party.dto.PartyDto;
+import com.back.domain.party.party.dto.PartyMemberDto;
 import com.back.domain.party.party.dto.PartyRequestDto;
 import com.back.domain.party.party.dto.PartyUpdateRequestDto;
 import com.back.domain.party.party.entity.Party;
+import com.back.domain.party.party.entity.PartyMember;
 import com.back.domain.party.party.service.PartyService;
 import com.back.global.common.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -40,7 +42,7 @@ public class ApiV1PartyController {
     }
 
     @PostMapping("/{partyId}/join")
-    @Operation(summary = "파티 가입", description = "공개 파티에 가입하는 API")
+    @Operation(summary = "공개 파티 가입 신청", description = "공개 파티에 가입을 신청하는 API. 파티장이 수락해야 가입 완료됩니다.")
     public ResponseEntity<ApiResponse<Void>> joinParty(
             @PathVariable Integer partyId,
             @RequestParam("memberId") Integer memberId
@@ -49,7 +51,7 @@ public class ApiV1PartyController {
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(ApiResponse.success("200", "파티 가입 성공"));
+                .body(ApiResponse.success("200", "파티 가입 신청 성공"));
     }
 
     @DeleteMapping("/{partyId}/leave")
@@ -131,7 +133,7 @@ public class ApiV1PartyController {
     }
 
     @PostMapping("/{partyId}/accept")
-    @Operation(summary = "초대 수락", description = "초대받은 멤버가 파티 초대를 수락하는 API")
+    @Operation(summary = "초대/신청 수락", description = "초대/신청 대기 중인 멤버를 파티원이 되도록 수락하는 API")
     public ResponseEntity<ApiResponse<Void>> acceptInvitation(
             @PathVariable Integer partyId,
             @RequestParam("memberId") Integer memberId
@@ -139,11 +141,11 @@ public class ApiV1PartyController {
         partyService.acceptInvitation(partyId, memberId);
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(ApiResponse.success("200", "파티 초대 수락 성공"));
+                .body(ApiResponse.success("200", "초대/신청 수락 성공"));
     }
 
     @PostMapping("/{partyId}/reject")
-    @Operation(summary = "초대 거절", description = "초대받은 멤버가 파티 초대를 거절하는 API")
+    @Operation(summary = "초대/신청 거절", description = "초대/신청 대기 중인 멤버를 거절하는 API")
     public ResponseEntity<ApiResponse<Void>> rejectInvitation(
             @PathVariable Integer partyId,
             @RequestParam("memberId") Integer memberId
@@ -151,6 +153,22 @@ public class ApiV1PartyController {
         partyService.rejectInvitation(partyId, memberId);
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(ApiResponse.success("200", "파티 초대 거절 성공"));
+                .body(ApiResponse.success("200", "초대/신청 거절 성공"));
+    }
+
+    @GetMapping("/{partyId}/requests")
+    @Operation(summary = "파티 가입 신청/초대 목록 조회", description = "파티장이 가입 신청 또는 초대 대기 중인 멤버 목록을 조회하는 API")
+    public ResponseEntity<ApiResponse<List<PartyMemberDto>>> getPendingJoinRequests(
+            @PathVariable Integer partyId,
+            @RequestParam("leaderId") Integer leaderId
+    ) {
+        List<PartyMember> pendingRequests = partyService.getPendingJoinRequests(partyId, leaderId);
+        List<PartyMemberDto> requestDtos = pendingRequests.stream()
+                .map(pm -> new PartyMemberDto(pm.getMember()))
+                .collect(Collectors.toList());
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResponse.success("200", "가입 신청/초대 목록 조회 성공", requestDtos));
     }
 }

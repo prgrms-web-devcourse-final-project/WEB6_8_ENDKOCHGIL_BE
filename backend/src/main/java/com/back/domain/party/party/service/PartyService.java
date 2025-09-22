@@ -57,22 +57,26 @@ public class PartyService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
 
+        // 1. 공개 파티만 가입 신청 가능
         if (!party.isPublic()) {
-            throw new CustomException(ErrorCode.BAD_REQUEST, "비공개 파티는 직접 가입할 수 없습니다.");
+            throw new CustomException(ErrorCode.BAD_REQUEST, "비공개 파티는 초대로만 가입할 수 있습니다.");
         }
 
-        if (party.getPartyMembers().size() >= party.getMaxMembers()) {
+        // 2. 이미 가입되어 있거나 신청/초대 대기 중인지 확인
+        if (partyMemberRepository.findByParty_IdAndMember_Id(partyId, memberId).isPresent()) {
+            throw new CustomException(ErrorCode.CONFLICT, "이미 가입되어 있거나 신청/초대 대기 중인 파티입니다.");
+        }
+
+        // 3. 파티의 정원이 가득 찼는지 확인
+        if (party.getPartyMembers().stream().filter(pm -> pm.getStatus() == PartyMemberStatus.ACCEPTED).count() >= party.getMaxMembers()) {
             throw new CustomException(ErrorCode.CONFLICT, "파티의 정원이 가득 찼습니다.");
         }
 
-        if (partyMemberRepository.findByParty_IdAndMember_Id(partyId, memberId).isPresent()) {
-            throw new CustomException(ErrorCode.CONFLICT, "이미 가입된 파티입니다.");
-        }
-
+        // 4. PartyMember 객체 생성 및 상태를 PENDING으로 설정
         PartyMember partyMember = new PartyMember();
         partyMember.setParty(party);
         partyMember.setMember(member);
-        partyMember.setStatus(PartyMemberStatus.ACCEPTED);
+        partyMember.setStatus(PartyMemberStatus.PENDING);
         partyMember.setJoinedAt(LocalDateTime.now());
         partyMemberRepository.save(partyMember);
     }
@@ -217,5 +221,17 @@ public class PartyService {
         }
 
         partyMemberRepository.delete(partyMember);
+    }
+
+    @Transactional(readOnly = true)
+    public List<PartyMember> getPendingJoinRequests(Integer partyId, Integer leaderId) {
+        Party party = partyRepository.findById(partyId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "파티를 찾을 수 없습니다."));
+
+        if (party.getLeader().getId() != leaderId) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED, "권한이 없습니다.");
+        }
+
+        return partyMemberRepository.findByParty_IdAndStatus(partyId, PartyMemberStatus.PENDING);
     }
 }
