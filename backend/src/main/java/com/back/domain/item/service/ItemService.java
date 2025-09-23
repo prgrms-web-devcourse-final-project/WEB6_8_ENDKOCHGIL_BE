@@ -22,7 +22,7 @@ public class ItemService {
                 createItemDto.name(),
                 createItemDto.img()
         );
-        return  new ItemDto(itemRepository.save(item));
+        return new ItemDto(itemRepository.save(item));
     }
      public List<ItemDto>  ReadAllItem()
      {
@@ -34,10 +34,11 @@ public class ItemService {
          return new ItemDto(itemRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Item not found with id: " + id)));
      }
 
-    public List<ItemDto> ReadItemByItemType(String type)
+    public List<ItemDto> ReadItemByItemType(ItemType type)
     {
-        ItemType itemType =ItemType.valueOf(type.toUpperCase());
-        return itemRepository.findByType(itemType).stream().map(ItemDto::new).toList();
+        //ItemType itemType =ItemType.valueOf(type.toUpperCase());
+        //System.out.println(type);
+        return itemRepository.findByType(type).stream().map(ItemDto::new).toList();
     }
 
 

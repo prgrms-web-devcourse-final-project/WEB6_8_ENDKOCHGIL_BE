@@ -2,6 +2,7 @@ package com.back.domain.item.controller;
 
 
 import com.back.domain.item.dto.ItemDto;
+import com.back.domain.item.entity.ItemType;
 import com.back.domain.item.service.ItemService;
 import com.back.domain.member.service.MemberService;
 import com.back.global.common.ApiResponse;
@@ -22,6 +23,20 @@ public class ApiV1ItemController {
     private final ItemService itemService;
     private final MemberService memberService;
 
+    @PostMapping
+    @Transactional
+    @Operation(summary = "테스트용 아이템 생성 ")
+    public ApiResponse<ItemDto> CreateItem(@RequestBody ItemDto itemDto)
+    {
+        ItemDto data = itemService.createItem(new ItemDto(
+                itemDto.name(),
+                itemDto.img(),
+                itemDto.itemType()
+        ));
+        return new ApiResponse<>("200", "아이템 생성 성공", data);
+    }
+
+
     @GetMapping
     @Transactional
     @Operation(summary = "아이템 전체 조회")
@@ -39,7 +54,7 @@ public class ApiV1ItemController {
     @GetMapping("/{id}")
     @Transactional
     @Operation(summary = "아이템 단건  조회")
-    public ApiResponse<ItemDto> findAllItems(@PathVariable int id)
+    public ApiResponse<ItemDto> findItemById(@PathVariable int id)
     {
         ItemDto data = itemService.ReadItemById(id);
         if (data == null) {
@@ -50,10 +65,10 @@ public class ApiV1ItemController {
         }
     }
 
-    @GetMapping("/{category}")
+    @GetMapping("/ItemType/{category}")
     @Transactional
     @Operation(summary = "아이템 종류별 조회")
-    public ApiResponse<List<ItemDto>> findAllItems(@PathVariable String category)
+    public ApiResponse<List<ItemDto>> findAllItems(@PathVariable ItemType category)
     {
         List<ItemDto> data =itemService.ReadItemByItemType(category);
         if (data == null || data.isEmpty()) {

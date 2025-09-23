@@ -3,7 +3,6 @@ package com.back.global.initData;
 import com.back.domain.item.dto.ItemDto;
 import com.back.domain.item.entity.ItemType;
 import com.back.domain.item.service.ItemService;
-import com.back.domain.member.entity.MemberGender;
 import com.back.domain.member.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,10 +57,10 @@ public class BaseInitData {
         }
     }
     private void createItem() {
-    itemService.createItem(new ItemDto("다람쥐", "localhost:8080/images/squirrel.png", ItemType.AVATAR) );
-        itemService.createItem(new ItemDto("뛰는다람쥐", "localhost:8080/images/jumping_squirrel.png", ItemType.AVATAR) );
-        itemService.createItem(new ItemDto("먹는다람쥐", "localhost:8080/images/eating_squirrel.png", ItemType.AVATAR) );
-        itemService.createItem(new ItemDto("다람쥐먹는중", "localhost:8080/images/squirrel_eating.png", ItemType.AVATAR) );
-        itemService.createItem(new ItemDto("다람쥐그림", "localhost:8080/images/squirrel_ed.png", ItemType.AVATAR) );
+        itemService.createItem(new ItemDto("다람쥐", "localhost:8080/images/squirrel.jpg", ItemType.AVATAR) );
+        itemService.createItem(new ItemDto("뛰는다람쥐", "localhost:8080/images/jumping_squirrel.jpg", ItemType.AVATAR) );
+        itemService.createItem(new ItemDto("먹는다람쥐", "localhost:8080/images/eating_squirrel.jpg", ItemType.AVATAR) );
+        itemService.createItem(new ItemDto("다람쥐먹는중", "localhost:8080/images/squirrel_eating.jpg", ItemType.FURNITURE) );
+        itemService.createItem(new ItemDto("다람쥐그림", "localhost:8080/images/squirrel_ed.jpg", ItemType.FURNITURE) );
     }
 }

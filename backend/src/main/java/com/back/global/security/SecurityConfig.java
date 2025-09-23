@@ -42,7 +42,7 @@ public class SecurityConfig {
                                         "/webjars/**",
                                         "/v3/api-docs/**",
                                         "/api/**",
-                                        "/static/image/**"
+                                        "/images/**"
                                 ).permitAll()
                                 .anyRequest().permitAll()
                 )
