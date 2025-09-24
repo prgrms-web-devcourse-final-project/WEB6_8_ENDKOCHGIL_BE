@@ -4,6 +4,7 @@ import com.back.domain.party.paryChat.dto.ChatMessageDto;
 import com.back.domain.party.paryChat.entity.ChatMessage;
 import com.back.domain.party.paryChat.service.ChatMessageService;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -25,7 +26,7 @@ public class WebSocketController {
     private final ChatMessageService chatMessageService;
 
     @MessageMapping("/chat.sendMessage") // 클라이언트가 메시지를 보내는 경로 (예: /app/chat.sendMessage)
-    public void sendMessage(@Payload ChatMessageDto chatMessageDto, @AuthenticationPrincipal User user) {
+    public void sendMessage(@Valid @Payload ChatMessageDto chatMessageDto, @AuthenticationPrincipal User user) {
         // 1. 메시지를 데이터베이스에 저장
         chatMessageDto.setSenderEmail(user.getUsername()); // 인증된 사용자 이메일로 설정
         chatMessageService.saveMessage(chatMessageDto);
