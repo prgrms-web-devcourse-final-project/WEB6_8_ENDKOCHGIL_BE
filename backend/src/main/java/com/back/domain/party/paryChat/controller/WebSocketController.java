@@ -67,7 +67,7 @@ public class WebSocketController {
     // HTTP API를 통해 채팅 기록을 가져오는 엔드포인트 추가
     @GetMapping("/history")
     @Operation(summary = "채팅 기록 조회", description = "특정 파티의 채팅 기록을 조회합니다.")
-    public Page<ChatMessage> getChatHistory(
+    public Page<ChatMessageDto> getChatHistory(
             @PathVariable Integer partyId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size

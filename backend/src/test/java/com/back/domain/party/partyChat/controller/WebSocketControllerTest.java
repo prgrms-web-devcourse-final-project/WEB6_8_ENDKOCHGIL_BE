@@ -152,9 +152,11 @@ class WebSocketControllerTest {
     @Test
     @DisplayName("채팅 기록 조회 HTTP GET 요청 테스트 (페이지네이션)")
     void getChatHistory_shouldReturnPagedChatHistory() throws Exception {
-        List<ChatMessage> chatHistory = Arrays.asList(chatMessage2, chatMessage1);
+        ChatMessageDto chatMessageDto1 = new ChatMessageDto(chatMessage1);
+        ChatMessageDto chatMessageDto2 = new ChatMessageDto(chatMessage2);
+        List<ChatMessageDto> chatHistoryDtos = Arrays.asList(chatMessageDto2, chatMessageDto1);
         Pageable pageable = PageRequest.of(0, 20);
-        Page<ChatMessage> pagedChatHistory = new PageImpl<>(chatHistory, pageable, chatHistory.size());
+        Page<ChatMessageDto> pagedChatHistory = new PageImpl<>(chatHistoryDtos, pageable, chatHistoryDtos.size());
 
         when(chatMessageService.getChatHistory(eq(partyId), any(Pageable.class)))
                 .thenReturn(pagedChatHistory);

@@ -73,7 +73,8 @@ public class ChatMessageService {
     }
 
     @Cacheable(value = "chatHistory", key = "#partyId")
-    public Page<ChatMessage> getChatHistory(Integer partyId, Pageable pageable) {
-        return chatMessageRepository.findByPartyIdOrderByCreateDateDesc(partyId, pageable);
+    public Page<ChatMessageDto> getChatHistory(Integer partyId, Pageable pageable) {
+        Page<ChatMessage> chatMessages = chatMessageRepository.findByPartyIdOrderByCreateDateDesc(partyId, pageable);
+        return chatMessages.map(ChatMessageDto::new);
     }
 }
