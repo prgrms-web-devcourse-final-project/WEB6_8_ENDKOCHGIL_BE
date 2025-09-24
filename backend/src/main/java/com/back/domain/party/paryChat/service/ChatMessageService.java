@@ -36,51 +36,45 @@ public class ChatMessageService {
                 .sender(memberRepository.findByEmail(chatMessageDto.getSenderEmail())
                         .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "멤버를 찾을 수 없습니다.")))
                 .build();
-
         chatMessageRepository.save(chatMessage);
     }
 
     @Transactional
-    @CacheEvict(value = "chatHistory", key = "#result.party.id")
-    public ChatMessage updateMessage(Integer messageId, String newContent, String senderEmail) {
-        // 메시지 ID로 메시지 엔티티를 찾습니다.
-        ChatMessage chatMessage = chatMessageRepository.findById(messageId)
-                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "메시지를 찾을 수 없습니다."));
-
-        // 메시지 보낸 사람과 수정 요청자가 동일한지 확인합니다.
-        Member sender = memberRepository.findByEmail(senderEmail)
-                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "멤버를 찾을 수 없습니다."));
-
-        if (chatMessage.getSender().getId() != sender.getId()) {
-            throw new CustomException(ErrorCode.UNAUTHORIZED, "메시지를 수정할 권한이 없습니다.");
-        }
+    @CacheEvict(value = "chatHistory", key = "#chatMessageDto.partyId")
+    public ChatMessage updateMessage(ChatMessageDto chatMessageDto) {
+        ChatMessage chatMessage = getAuthorizedChatMessage(chatMessageDto.getId(), chatMessageDto.getSenderEmail(), "수정");
 
         // 메시지 내용을 업데이트하고 반환합니다.
-        chatMessage.setContent(newContent);
+        chatMessage.setContent(chatMessageDto.getContent());
         return chatMessageRepository.save(chatMessage);
     }
 
     @Transactional
     @CacheEvict(value = "chatHistory", key = "#result.party.id")
     public ChatMessage deleteMessage(Integer messageId, String senderEmail) {
-        // 메시지 ID로 메시지 엔티티를 찾습니다.
-        ChatMessage chatMessage = chatMessageRepository.findById(messageId)
-                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "메시지를 찾을 수 없습니다."));
-
-        // 메시지 보낸 사람과 삭제 요청자가 동일한지 확인합니다.
-        Member sender = memberRepository.findByEmail(senderEmail)
-                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "멤버를 찾을 수 없습니다."));
-
-        if (chatMessage.getSender().getId() != sender.getId()) {
-            throw new CustomException(ErrorCode.UNAUTHORIZED, "메시지를 삭제할 권한이 없습니다.");
-        }
+        ChatMessage chatMessage = getAuthorizedChatMessage(messageId, senderEmail, "삭제");
 
         // 메시지를 삭제하고, 캐시 무효화를 위해 반환합니다.
         chatMessageRepository.delete(chatMessage);
         return chatMessage;
     }
 
-    @Cacheable(value = "chatHistory", key = "{#partyId, #pageable.pageNumber, #pageable.pageSize}")
+    private ChatMessage getAuthorizedChatMessage(Integer messageId, String senderEmail, String operation) {
+        // 메시지 ID로 메시지 엔티티를 찾습니다.
+        ChatMessage chatMessage = chatMessageRepository.findById(messageId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "메시지를 찾을 수 없습니다."));
+
+        // 메시지 보낸 사람과 요청자가 동일한지 확인합니다.
+        Member sender = memberRepository.findByEmail(senderEmail)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "멤버를 찾을 수 없습니다."));
+
+        if (!chatMessage.getSender().getId().equals(sender.getId())) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED, "메시지를 " + operation + "할 권한이 없습니다.");
+        }
+        return chatMessage;
+    }
+
+    @Cacheable(value = "chatHistory", key = "#partyId")
     public Page<ChatMessage> getChatHistory(Integer partyId, Pageable pageable) {
         return chatMessageRepository.findByPartyIdOrderByCreateDateDesc(partyId, pageable);
     }

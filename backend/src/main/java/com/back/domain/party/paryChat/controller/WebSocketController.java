@@ -12,6 +12,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -23,8 +25,9 @@ public class WebSocketController {
     private final ChatMessageService chatMessageService;
 
     @MessageMapping("/chat.sendMessage") // 클라이언트가 메시지를 보내는 경로 (예: /app/chat.sendMessage)
-    public void sendMessage(@Payload ChatMessageDto chatMessageDto) {
+    public void sendMessage(@Payload ChatMessageDto chatMessageDto, @AuthenticationPrincipal User user) {
         // 1. 메시지를 데이터베이스에 저장
+        chatMessageDto.setSenderEmail(user.getUsername()); // 인증된 사용자 이메일로 설정
         chatMessageService.saveMessage(chatMessageDto);
 
         // 2. 메시지를 해당 파티의 채팅방으로 전송
@@ -32,17 +35,23 @@ public class WebSocketController {
     }
 
     @MessageMapping("/chat.updateMessage")
-    public void updateMessage(@Payload ChatMessageDto chatMessageDto) {
+    public void updateMessage(@Payload ChatMessageDto chatMessageDto, @AuthenticationPrincipal User user) {
+        // 인증된 사용자의 이메일을 DTO에 설정
+        chatMessageDto.setSenderEmail(user.getUsername());
+
         // 메시지를 업데이트하고 반환된 최신 정보를 브로드캐스트합니다.
-        ChatMessage updatedMessage = chatMessageService.updateMessage(chatMessageDto.getId(), chatMessageDto.getContent(), chatMessageDto.getSenderEmail());
+        ChatMessage updatedMessage = chatMessageService.updateMessage(chatMessageDto); // DTO를 직접 넘기도록 수정
         ChatMessageDto updatedDto = new ChatMessageDto(updatedMessage);
         messagingTemplate.convertAndSend("/topic/party/" + updatedDto.getPartyId(), updatedDto);
     }
 
     @MessageMapping("/chat.deleteMessage")
-    public void deleteMessage(@Payload ChatMessageDto chatMessageDto) {
+    public void deleteMessage(@Payload ChatMessageDto chatMessageDto, @AuthenticationPrincipal User user) {
+        // 인증된 사용자의 이메일을 DTO에 설정
+        String senderEmail = user.getUsername();
+
         // 메시지를 삭제하고 변경 내용을 브로드캐스트합니다.
-        ChatMessage deletedMessage = chatMessageService.deleteMessage(chatMessageDto.getId(), chatMessageDto.getSenderEmail());
+        ChatMessage deletedMessage = chatMessageService.deleteMessage(chatMessageDto.getId(), senderEmail);
         ChatMessageDto deletedDto = new ChatMessageDto(deletedMessage);
         messagingTemplate.convertAndSend("/topic/party/" + deletedDto.getPartyId(), deletedDto);
     }
