@@ -33,16 +33,18 @@ public class WebSocketController {
 
     @MessageMapping("/chat.updateMessage")
     public void updateMessage(@Payload ChatMessageDto chatMessageDto) {
-        // 메시지를 업데이트하고 변경 내용을 브로드캐스트합니다.
-        chatMessageService.updateMessage(chatMessageDto.getId(), chatMessageDto.getContent(), chatMessageDto.getSenderEmail());
-        messagingTemplate.convertAndSend("/topic/party/" + chatMessageDto.getPartyId(), chatMessageDto);
+        // 메시지를 업데이트하고 반환된 최신 정보를 브로드캐스트합니다.
+        ChatMessage updatedMessage = chatMessageService.updateMessage(chatMessageDto.getId(), chatMessageDto.getContent(), chatMessageDto.getSenderEmail());
+        ChatMessageDto updatedDto = new ChatMessageDto(updatedMessage);
+        messagingTemplate.convertAndSend("/topic/party/" + updatedDto.getPartyId(), updatedDto);
     }
 
     @MessageMapping("/chat.deleteMessage")
     public void deleteMessage(@Payload ChatMessageDto chatMessageDto) {
         // 메시지를 삭제하고 변경 내용을 브로드캐스트합니다.
-        chatMessageService.deleteMessage(chatMessageDto.getId(), chatMessageDto.getSenderEmail());
-        messagingTemplate.convertAndSend("/topic/party/" + chatMessageDto.getPartyId(), chatMessageDto);
+        ChatMessage deletedMessage = chatMessageService.deleteMessage(chatMessageDto.getId(), chatMessageDto.getSenderEmail());
+        ChatMessageDto deletedDto = new ChatMessageDto(deletedMessage);
+        messagingTemplate.convertAndSend("/topic/party/" + deletedDto.getPartyId(), deletedDto);
     }
 
     // HTTP API를 통해 채팅 기록을 가져오는 엔드포인트 추가
