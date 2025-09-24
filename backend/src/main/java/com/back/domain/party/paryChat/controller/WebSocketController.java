@@ -4,7 +4,6 @@ import com.back.domain.party.paryChat.dto.ChatMessageDto;
 import com.back.domain.party.paryChat.entity.ChatMessage;
 import com.back.domain.party.paryChat.service.ChatMessageService;
 import io.swagger.v3.oas.annotations.Operation;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -25,13 +24,14 @@ public class WebSocketController {
     private final SimpMessageSendingOperations messagingTemplate;
     private final ChatMessageService chatMessageService;
 
-    @MessageMapping("/chat.sendMessage") // 클라이언트가 메시지를 보내는 경로 (예: /app/chat.sendMessage)
-    public void sendMessage(@Valid @Payload ChatMessageDto chatMessageDto, @AuthenticationPrincipal User user) {
-        // 1. 메시지를 데이터베이스에 저장
-        chatMessageDto.setSenderEmail(user.getUsername()); // 인증된 사용자 이메일로 설정
+    @MessageMapping("/chat.sendMessage")
+    public void sendMessage(@Payload ChatMessageDto chatMessageDto, @AuthenticationPrincipal User user) {
+        // 1. 메시지를 데이터베이스에 비동기적으로 저장
+        chatMessageDto.setSenderEmail(user.getUsername());
         chatMessageService.saveMessage(chatMessageDto);
 
-        // 2. 메시지를 해당 파티의 채팅방으로 전송
+        // 2. 메시지를 해당 파티의 채팅방으로 즉시 전송
+        // DB 저장과 관계없이 즉각적으로 메시지를 브로드캐스트하여 응답 시간을 단축합니다.
         messagingTemplate.convertAndSend("/topic/party/" + chatMessageDto.getPartyId(), chatMessageDto);
     }
 
