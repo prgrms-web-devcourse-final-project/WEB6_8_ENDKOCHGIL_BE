@@ -20,7 +20,7 @@ on:
       - "backend/settings.gradle.kts"
       - "backend/Dockerfile"
     branches:
-      - main
+      - dev
 
 # 권한 최소화/명시화
 permissions:
