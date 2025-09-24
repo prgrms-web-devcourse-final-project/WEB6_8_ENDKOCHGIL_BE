@@ -5,13 +5,15 @@ import com.back.domain.party.party.entity.Party;
 import com.back.domain.party.party.entity.PartyMember;
 import com.back.domain.party.party.service.PartyService;
 import com.back.global.common.ApiResponse;
+import com.back.global.exception.CustomException;
+import com.back.global.exception.ErrorCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication; // Authentication 객체 임포트
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,7 +32,11 @@ public class ApiV1PartyController {
         if (authentication == null || authentication.getName() == null) {
             throw new IllegalArgumentException("인증 정보가 없습니다.");
         }
-        return Integer.parseInt(authentication.getName());
+        try {
+            return Integer.parseInt(authentication.getName());
+        } catch (NumberFormatException e) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED, "유효하지 않은 인증 정보입니다.");
+        }
     }
 
     @PostMapping

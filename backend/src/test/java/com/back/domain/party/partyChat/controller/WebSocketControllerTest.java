@@ -126,25 +126,24 @@ class WebSocketControllerTest {
     @Test
     @DisplayName("STOMP 메시지 삭제 테스트")
     void deleteMessage_shouldDeleteAndBroadcast() {
-        ChatMessageDto deleteDto = new ChatMessageDto();
-        deleteDto.setId(101);
-        deleteDto.setPartyId(partyId);
-        deleteDto.setSenderEmail("test@example.com");
+        Integer partyId = 1;
+        Integer messageId = 10;
+        String senderEmail = "test@example.com";
 
-        ChatMessage deletedChatMessage = ChatMessage.builder()
-                .content("content")
-                .party(party)
-                .sender(sender)
-                .build();
-        when(chatMessageService.deleteMessage(
-                eq(deleteDto.getId()), eq(deleteDto.getSenderEmail())
-        )).thenReturn(deletedChatMessage);
+        ChatMessageDto deleteDto = new ChatMessageDto();
+        deleteDto.setId(messageId);
+        deleteDto.setPartyId(partyId);
+
+        User user = new User(senderEmail, "", Collections.emptyList());
+
+        doNothing().when(chatMessageService).deleteMessage(eq(deleteDto.getId()), eq(senderEmail));
 
         webSocketController.deleteMessage(deleteDto, user);
 
         verify(chatMessageService, times(1)).deleteMessage(
-                eq(deleteDto.getId()), eq(deleteDto.getSenderEmail())
+                eq(deleteDto.getId()), eq(senderEmail)
         );
+
         verify(messagingTemplate, times(1)).convertAndSend(
                 eq("/topic/party/" + deleteDto.getPartyId()), any(ChatMessageDto.class)
         );
