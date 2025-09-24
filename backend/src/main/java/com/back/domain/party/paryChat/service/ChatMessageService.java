@@ -9,6 +9,8 @@ import com.back.domain.party.paryChat.repository.ChatMessageRepository;
 import com.back.global.exception.CustomException;
 import com.back.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -24,6 +26,7 @@ public class ChatMessageService {
     private final MemberRepository memberRepository;
 
     @Transactional
+    @CacheEvict(value = "chatHistory", key = "#chatMessageDto.partyId")
     public void saveMessage(ChatMessageDto chatMessageDto) {
         // 엔티티를 가져와 메시지를 생성
         ChatMessage chatMessage = new ChatMessage();
@@ -37,6 +40,7 @@ public class ChatMessageService {
     }
 
     @Transactional
+    @CacheEvict(value = "chatHistory", key = "#partyId")
     public void updateMessage(Integer messageId, String newContent, String senderEmail) {
         // 메시지 ID로 메시지 엔티티를 찾습니다.
         ChatMessage chatMessage = chatMessageRepository.findById(messageId)
@@ -56,6 +60,7 @@ public class ChatMessageService {
     }
 
     @Transactional
+    @CacheEvict(value = "chatHistory", key = "#partyId")
     public void deleteMessage(Integer messageId, String senderEmail) {
         // 메시지 ID로 메시지 엔티티를 찾습니다.
         ChatMessage chatMessage = chatMessageRepository.findById(messageId)
@@ -73,6 +78,7 @@ public class ChatMessageService {
         chatMessageRepository.delete(chatMessage);
     }
 
+    @Cacheable(value = "chatHistory", key = "{#partyId, #pageable.pageNumber, #pageable.pageSize}")
     public Page<ChatMessage> getChatHistory(Integer partyId, Pageable pageable) {
         return chatMessageRepository.findByPartyIdOrderByCreateDateDesc(partyId, pageable);
     }
