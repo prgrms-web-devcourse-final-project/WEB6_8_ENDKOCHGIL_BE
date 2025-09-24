@@ -9,10 +9,10 @@ import com.back.domain.party.paryChat.repository.ChatMessageRepository;
 import com.back.global.exception.CustomException;
 import com.back.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -73,7 +73,7 @@ public class ChatMessageService {
         chatMessageRepository.delete(chatMessage);
     }
 
-    public List<ChatMessage> getChatHistory(Integer partyId) {
-        return chatMessageRepository.findByPartyIdOrderByCreateDateDesc(partyId);
+    public Page<ChatMessage> getChatHistory(Integer partyId, Pageable pageable) {
+        return chatMessageRepository.findByPartyIdOrderByCreateDateDesc(partyId, pageable);
     }
 }

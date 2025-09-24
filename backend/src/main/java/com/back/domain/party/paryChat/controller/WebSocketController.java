@@ -5,15 +5,14 @@ import com.back.domain.party.paryChat.entity.ChatMessage;
 import com.back.domain.party.paryChat.service.ChatMessageService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/parties/{partyId}/chat")
@@ -49,7 +48,12 @@ public class WebSocketController {
     // HTTP API를 통해 채팅 기록을 가져오는 엔드포인트 추가
     @GetMapping("/history")
     @Operation(summary = "채팅 기록 조회", description = "특정 파티의 채팅 기록을 조회합니다.")
-    public List<ChatMessage> getChatHistory(@PathVariable Integer partyId) {
-        return chatMessageService.getChatHistory(partyId);
+    public Page<ChatMessage> getChatHistory(
+            @PathVariable Integer partyId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createDate").descending());
+        return chatMessageService.getChatHistory(partyId, pageable);
     }
 }
