@@ -3,12 +3,14 @@ package com.back.domain.party.paryChat.controller;
 import com.back.domain.party.paryChat.dto.ChatMessageDto;
 import com.back.domain.party.paryChat.entity.ChatMessage;
 import com.back.domain.party.paryChat.service.ChatMessageService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
@@ -23,16 +25,28 @@ public class WebSocketController {
 
     private final SimpMessageSendingOperations messagingTemplate;
     private final ChatMessageService chatMessageService;
+    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final ObjectMapper objectMapper;
 
-    @MessageMapping("/chat.sendMessage")
+    private static final String CHAT_TOPIC = "chat-messages";
+
+    @MessageMapping("/chat.sendMessage") // 클라이언트가 메시지를 보내는 경로 (예: /app/chat.sendMessage)
     public void sendMessage(@Payload ChatMessageDto chatMessageDto, @AuthenticationPrincipal User user) {
-        // 1. 메시지를 데이터베이스에 비동기적으로 저장
+        // 1. 메시지 발신자 설정
         chatMessageDto.setSenderEmail(user.getUsername());
-        chatMessageService.saveMessage(chatMessageDto);
 
-        // 2. 메시지를 해당 파티의 채팅방으로 즉시 전송
-        // DB 저장과 관계없이 즉각적으로 메시지를 브로드캐스트하여 응답 시간을 단축합니다.
+        // 2. 메시지를 해당 파티의 채팅방으로 즉시 전송 (실시간성 확보)
         messagingTemplate.convertAndSend("/topic/party/" + chatMessageDto.getPartyId(), chatMessageDto);
+
+        // 3. 메시지 저장 작업을 Kafka로 오프로드 (비동기 및 안정성 확보)
+        try {
+            String messageJson = objectMapper.writeValueAsString(chatMessageDto);
+            // 파티 ID를 키로 사용하여 같은 파티 메시지가 같은 파티션에 저장되도록 보장 (메시지 순서 보장)
+            kafkaTemplate.send(CHAT_TOPIC, chatMessageDto.getPartyId().toString(), messageJson);
+        } catch (Exception e) {
+            // Kafka 전송 실패 시, 로깅 또는 대체 로직 추가
+            System.err.println("Failed to send message to Kafka: " + e.getMessage());
+        }
     }
 
     @MessageMapping("/chat.updateMessage")
