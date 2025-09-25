@@ -6,6 +6,8 @@ import com.back.domain.party.paryChat.service.ChatMessageService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -22,6 +24,8 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/parties/{partyId}/chat")
 @RequiredArgsConstructor
 public class WebSocketController {
+
+    private static final Logger log = LoggerFactory.getLogger(WebSocketController.class);
 
     private final SimpMessageSendingOperations messagingTemplate;
     private final ChatMessageService chatMessageService;
@@ -44,8 +48,10 @@ public class WebSocketController {
             // 파티 ID를 키로 사용하여 같은 파티 메시지가 같은 파티션에 저장되도록 보장 (메시지 순서 보장)
             kafkaTemplate.send(CHAT_TOPIC, chatMessageDto.getPartyId().toString(), messageJson);
         } catch (Exception e) {
-            // Kafka 전송 실패 시, 로깅 또는 대체 로직 추가
-            System.err.println("Failed to send message to Kafka: " + e.getMessage());
+            // Kafka Producer 실패는 (일반적으로 일시적이지만) 심각하므로 ERROR 레벨로 기록합니다.
+            log.error("Failed to send chat message to Kafka. Message: {}, Exception: {}", chatMessageDto, e.getMessage(), e);
+            // Kafka 전송 실패는 데이터베이스에 기록을 남기지 못할 위험이 있지만,
+            // 실시간 채팅 자체는 이미 클라이언트에 전달되었으므로 시스템을 중단하지 않고 로그만 남깁니다.
         }
     }
 

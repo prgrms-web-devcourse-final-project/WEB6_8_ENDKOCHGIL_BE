@@ -1,7 +1,12 @@
 package com.back.domain.party.paryChat.config;
 
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.listener.ConsumerRecordRecoverer;
 import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.util.backoff.FixedBackOff;
@@ -9,34 +14,47 @@ import org.springframework.util.backoff.FixedBackOff;
 @Configuration
 public class KafkaConfig {
 
-    private static final long INTERVAL_MS = 1000L; // 재처리 간격 1초
-    private static final long MAX_ATTEMPTS = 3L;   // 최대 재처리 횟수 (총 3회 시도)
+    private static final Logger log = LoggerFactory.getLogger(KafkaConfig.class);
 
-    /**
-     * Kafka Consumer에서 메시지 처리 실패 시 재처리 및 최종 복구 로직을 정의하는 에러 핸들러를 Bean으로 등록합니다.
-     */
+    private final KafkaTemplate<String, String> kafkaTemplate;
+
+    @Value("${spring.kafka.dlq.topic:chat-messages-dlq}")
+    private String dlqTopic;
+
+    public KafkaConfig(KafkaTemplate<String, String> kafkaTemplate) {
+        this.kafkaTemplate = kafkaTemplate;
+    }
+
+    private static final long INTERVAL_MS = 1000L;
+    private static final long MAX_ATTEMPTS = 3L;
+
     @Bean
+    @SuppressWarnings("unchecked")
     public DefaultErrorHandler errorHandler() {
-        // 1. 재처리 정책 설정: 1초 간격으로 2번 재시도 (총 3회 시도)
         FixedBackOff fixedBackOff = new FixedBackOff(INTERVAL_MS, MAX_ATTEMPTS - 1);
 
-        // 2. 최종 실패 시 복구 로직 정의 (ConsumerRecordRecoverer 사용)
         ConsumerRecordRecoverer recoverer = (record, exception) -> {
-            // 메시지 처리 실패 시 로그를 남기는 복구 로직
-            System.err.printf(
-                    "--- FINAL FAILURE --- Message could not be processed after %d retries. Topic: %s, Partition: %d, Offset: %d, Key: %s, Exception: %s%n",
-                    MAX_ATTEMPTS,
-                    record.topic(),
-                    record.partition(),
-                    record.offset(),
-                    record.key(),
-                    exception.getMessage()
+            ConsumerRecord<String, String> consumerRecord = (ConsumerRecord<String, String>) record;
+
+            log.error(
+                    "--- FINAL FAILURE --- Message moved to DLQ. Topic: {}, Partition: {}, Offset: {}, Key: {}, Exception: {}",
+                    consumerRecord.topic(),
+                    consumerRecord.partition(),
+                    consumerRecord.offset(),
+                    consumerRecord.key(),
+                    exception.getMessage(),
+                    exception // 예외 객체를 마지막 인자로 전달하여 스택 트레이스를 로그에 포함시킵니다.
             );
 
-            // TODO: (선택 사항) 여기에 Dead Letter Queue(DLQ)로 메시지를 발행하는 로직을 추가하여 영구적인 메시지 유실을 방지해야 합니다.
+            try {
+                // DLQ로 메시지 발행
+                kafkaTemplate.send(dlqTopic, consumerRecord.key(), consumerRecord.value()).get();
+            } catch (Exception e) {
+                // DLQ 전송 실패 시, 심각한 오류 로그 기록
+                log.error("CRITICAL FAILURE: Failed to send message to DLQ! Data loss imminent. Original message: {}", consumerRecord.value(), e);
+            }
         };
 
-        // 3. DefaultErrorHandler를 생성하고 즉시 반환합니다. (지역 변수 제거)
         return new DefaultErrorHandler(recoverer, fixedBackOff);
     }
 }
