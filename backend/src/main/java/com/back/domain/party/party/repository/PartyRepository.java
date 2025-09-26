@@ -19,7 +19,8 @@ public interface PartyRepository extends JpaRepository<Party, Integer> {
 
     @Query(value = "SELECT DISTINCT p FROM Party p " +
             "LEFT JOIN FETCH p.leader l " +
-            "LEFT JOIN p.partyMembers pm " +
+            "LEFT JOIN FETCH p.partyMembers pm " +
+            "LEFT JOIN FETCH pm.member mbm " +
             "LEFT JOIN Mission m ON m.party = p " +
             "WHERE p.isPublic = true",
             countQuery = "SELECT COUNT(p) FROM Party p WHERE p.isPublic = true")
