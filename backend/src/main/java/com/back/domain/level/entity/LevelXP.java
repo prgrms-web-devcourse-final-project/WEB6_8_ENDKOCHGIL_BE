@@ -4,9 +4,15 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "level_xp")
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
 public class LevelXP {
 
     @Id
@@ -23,8 +29,4 @@ public class LevelXP {
     public static final int MAX_VARIABLE_LEVEL = 30;
     public static final int FIXED_XP_REQUIREMENT = 30000;
 
-    public LevelXP() {}
-
-    public Integer getLevel() { return level; }
-    public Long getCumulativeXP() { return cumulativeXP; }
 }
