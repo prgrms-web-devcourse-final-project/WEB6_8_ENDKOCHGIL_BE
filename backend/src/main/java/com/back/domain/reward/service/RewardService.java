@@ -45,6 +45,11 @@ public class RewardService {
        return rewardRepository.findByRewardType(rewardType);
     }
 
+    public List<Reward> findByRewardTypeAndRequireValue(RewardType rewardType,int requireValue)
+    {
+        return rewardRepository.findByRewardTypeAndRequireValue(rewardType,requireValue);
+    }
+
     public void giveReward(int memberId, int value, int rewardId)
     {
         Reward reward = rewardRepository.findById(rewardId).get();
