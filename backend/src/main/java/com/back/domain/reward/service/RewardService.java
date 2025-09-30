@@ -17,7 +17,8 @@ import java.util.List;
 public class RewardService {
     private  final RewardRepository rewardRepository;
     private final MemberService  memberService;
-    public void createReward (RewardType rewardType, List<RewardContent> rewardContents, int requiredValue )
+  public void createReward (RewardType rewardType, List<RewardContent> rewardContents, int requiredValue )
+
     {
         rewardRepository.save(new Reward(rewardType,rewardContents,requiredValue));
     }
@@ -25,6 +26,7 @@ public class RewardService {
     public List<Reward> findReward() {
 
         return rewardRepository.findAll();
+
     }
 
     public void updateReward(int id, RewardType rewardType, List<RewardContent> rewardContents, int requiredValue)
@@ -45,6 +47,7 @@ public class RewardService {
        return rewardRepository.findByRewardType(rewardType);
     }
 
+
     public void giveReward(int memberId, int value, int rewardId)
     {
         Reward reward = rewardRepository.findById(rewardId).get();
@@ -57,6 +60,7 @@ public class RewardService {
                 if(rewardContent.getContentType() == ContentType.XP)
                 {
                     memberService.modifyStatus(member,0,0,0);
+
                     //TODO: XP 보상 로직 추가
                 }
                 else if(rewardContent.getContentType() == ContentType.MONEY)
