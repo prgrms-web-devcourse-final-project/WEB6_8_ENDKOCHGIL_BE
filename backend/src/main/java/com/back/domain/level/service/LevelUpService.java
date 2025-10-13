@@ -30,12 +30,12 @@ public class LevelUpService {
     // 레벨업 보상 서비스
     @Transactional
     public void checkLevelUp(Integer memberId) {
-        log.info("### [LEVELUP] START checkLevelUp for Member ID: {}", memberId); // <-- START 로그
+        log.info("### [LEVELUP] START checkLevelUp for Member ID: {}", memberId);
 
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "Member not found with id: " + memberId));
 
-        log.info("    [Current Status] Initial Level: {}, Initial XP: {}", member.getLevel(), member.getXp()); // <-- 현재 상태 로그
+        log.info("    [Current Status] Initial Level: {}, Initial XP: {}", member.getLevel(), member.getXp());
 
         // 1. 레벨업 체크 및 처리
         checkAndProcessLevelUp(member);
@@ -43,7 +43,7 @@ public class LevelUpService {
         // 2. 변경된 Member 저장
         memberRepository.save(member);
 
-        log.info("### [LEVELUP] END checkLevelUp. Final Level: {}, Final XP: {}", member.getLevel(), member.getXp()); // <-- END 로그
+        log.info("### [LEVELUP] END checkLevelUp. Final Level: {}, Final XP: {}", member.getLevel(), member.getXp());
     }
 
 
@@ -51,16 +51,18 @@ public class LevelUpService {
         int currentLevel = member.getLevel();
         int currentXp = member.getXp();
 
-        Optional<LevelXP> nextLevelXP = levelXPRepository.findById(currentLevel + 1);
+        // 현재 레벨에 해당하는 LevelXP 엔티티 조회
+        Optional<LevelXP> currentLevelXP = levelXPRepository.findById(currentLevel);
 
         // 반복 레벨업 체크 루프
-        while (nextLevelXP.isPresent() && currentXp >= nextLevelXP.get().getXpToNext()) {
+        // 루프 조건: 현재 레벨 XP 엔티티가 존재하고, 현재 XP가 해당 레벨의 요구 XP 이상인 경우
+        while (currentLevelXP.isPresent() && currentXp >= currentLevelXP.get().getXpToNext()) {
 
             log.info("    [Level Check] Current Level: {}, Current XP: {}, Required XP for Level {}: {}",
-                    currentLevel, currentXp, currentLevel + 1, nextLevelXP.get().getXpToNext()); // <-- 루프 진입 전 체크 로그
+                    currentLevel, currentXp, currentLevel + 1, currentLevelXP.get().getXpToNext());
 
             // 1. 레벨업 처리
-            int requiredXp = nextLevelXP.get().getXpToNext();
+            int requiredXp = currentLevelXP.get().getXpToNext(); // 현재 레벨의 정확한 요구 XP 사용
             int excessXp = currentXp - requiredXp;
 
             currentLevel++;
@@ -69,28 +71,30 @@ public class LevelUpService {
             member.setLevel(currentLevel);
             member.setXp(currentXp);
 
-            log.info("    [LEVEL UP!] Member Leveled Up to {}. Remaining XP: {}", currentLevel, currentXp); // <-- 레벨업 결과 로그
+            log.info("    [LEVEL UP!] Member Leveled Up to {}. Remaining XP: {}", currentLevel, currentXp);
 
-            // 2. 다음 레벨 요구량(xpReq) 업데이트
-            Optional<LevelXP> newNextLevelXP = levelXPRepository.findById(currentLevel + 1);
-            if (newNextLevelXP.isPresent()) {
-                member.setXpReq(newNextLevelXP.get().getXpToNext());
-                log.info("    [XP Req Update] Next XP Required: {}", newNextLevelXP.get().getXpToNext()); // <-- 다음 요구 XP 로그
+            // 2. 다음 레벨 요구량(xpReq) 업데이트 및 다음 루프 조건 업데이트
+
+            // 레벨이 증가했으므로, 새로운 currentLevel(예: 2)의 LevelXP를 조회합니다.
+            Optional<LevelXP> newCurrentLevelXP = levelXPRepository.findById(currentLevel);
+
+            if (newCurrentLevelXP.isPresent()) {
+                member.setXpReq(newCurrentLevelXP.get().getXpToNext());
+                log.info("    [XP Req Update] Next XP Required: {}", newCurrentLevelXP.get().getXpToNext());
             } else {
-                // Level 30+와 같은 고정 요구량 처리 (LevelXP.FIXED_XP_REQUIREMENT)
+                // Level 30+와 같은 고정 요구량 처리
                 member.setXpReq(LevelXP.FIXED_XP_REQUIREMENT);
-                log.info("    [XP Req Update] Fixed XP Required: {}", LevelXP.FIXED_XP_REQUIREMENT); // <-- 고정 요구 XP 로그
+                log.info("    [XP Req Update] Fixed XP Required: {}", LevelXP.FIXED_XP_REQUIREMENT);
             }
 
-            // 3. 레벨업 보상 지급 (이 로직은 테스트에서 rewardRepository.deleteAll()로 인해 실제로 실행되지 않습니다.)
+            // 다음 반복을 위해 현재 레벨 XP 참조를 업데이트합니다.
+            currentLevelXP = newCurrentLevelXP;
+
+            // 3. 레벨업 보상 지급 (로직 유지)
             List<Reward> rewards = rewardService.findByRewardTypeAndRequireValue(RewardType.LEVELUP, currentLevel);
             if (!rewards.isEmpty()) {
-                // 이 부분을 우리가 수정하기로 했었지만, 현재 테스트 상황에서는 실행되지 않아 문제가 없습니다.
                 // rewardService.giveReward(member.getId(), currentLevel, rewards.getFirst().getId());
             }
-
-            // 다음 레벨 정보 업데이트를 위한 반복
-            nextLevelXP = newNextLevelXP;
         }
     }
 
