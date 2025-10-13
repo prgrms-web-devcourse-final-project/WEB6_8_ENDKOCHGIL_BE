@@ -37,7 +37,7 @@ public class Member extends BaseEntity {
     // *** 장착한 칭호/아이템 정보 ***
     @ManyToOne(fetch = FetchType.LAZY)
     private Title title;
-    @OneToMany(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     private Item item;
 
     // *** 보유한 칭호/아이템 정보 ***
