@@ -90,10 +90,10 @@ public class LevelUpService {
             // 다음 반복을 위해 현재 레벨 XP 참조를 업데이트합니다.
             currentLevelXP = newCurrentLevelXP;
 
-            // 3. 레벨업 보상 지급 (로직 유지)
+            // 3. 레벨업 보상 지급
             List<Reward> rewards = rewardService.findByRewardTypeAndRequireValue(RewardType.LEVELUP, currentLevel);
             if (!rewards.isEmpty()) {
-                // rewardService.giveReward(member.getId(), currentLevel, rewards.getFirst().getId());
+                 rewardService.giveReward(member.getId(), currentLevel, rewards.getFirst().getId());
             }
         }
     }
