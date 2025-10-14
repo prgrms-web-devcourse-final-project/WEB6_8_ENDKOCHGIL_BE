@@ -76,7 +76,7 @@ public class RewardService {
                 else if(rewardContent.getContentType() == ContentType.MONEY)
                 {
 
-                    member.setMoney(member.getMoney() + rewardContent.getRewardValue());
+                    memberService.modifyMoney(member,member.getMoney()+rewardContent.getRewardValue());
                 }
                 else if(rewardContent.getContentType() == ContentType.ITEM)
                 {
@@ -174,8 +174,7 @@ public class RewardService {
                 break;
 
             case MONEY:
-                memberService.modifyStatus(member, member.getLevel(), member.getXp(),
-                        member.getMoney() + content.getRewardValue());
+                memberService.modifyMoney(member, member.getMoney() + content.getRewardValue());
                 break;
 
             case ITEM:
@@ -196,7 +195,7 @@ public class RewardService {
 
             case MONEY:
                 int newMoney = Math.max(0, member.getMoney() - content.getRewardValue());
-                memberService.modifyStatus(member, member.getLevel(), member.getXp(), newMoney);
+                memberService.modifyMoney(member, newMoney);
                 break;
 
             case ITEM:
